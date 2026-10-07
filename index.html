@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jurnal Mengajar Guru Smansagas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af',
+                        secondary: '#0f766e',
+                        admin: '#991b1b',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .role-badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 9999px; }
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+
+<!-- ============= HALAMAN LOGIN ============= -->
+<section id="loginSection" class="flex items-center justify-center min-h-screen px-4">
+    <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md fade-in">
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-primary">📒 Jurnal Mengajar Guru Smansagas</h1>
+            <p class="text-gray-500 mt-1">Sistem Terpusat — Waka Kurikulum & Guru</p>
+        </div>
+        
+        <div id="loginForm">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Nama Pengguna</label>
+                    <input type="text" id="username" placeholder="Masukkan nama pengguna" 
+                        class="w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary/50 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Kata Sandi</label>
+                    <input type="password" id="password" placeholder="Masukkan kata sandi" 
+                        class="w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary/50 outline-none">
+                </div>
+                <button onclick="prosesLogin()" 
+                    class="w-full bg-primary text-white py-2.5 rounded-lg hover:bg-primary/90 transition font-medium">
+                    <i class="fa fa-sign-in mr-1"></i> Masuk ke Sistem
+                </button>
+            </div>
+            <p class="mt-6 text-xs text-gray-400 text-center">
+                Akun Admin bawaan: <b>admin / admin123</b><br>
+                Guru dapat meminta akun kepada Admin
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- ============= HALAMAN UTAMA ============= -->
+<section id="mainSection" class="hidden max-w-6xl mx-auto p-4 md:p-6">
+    <!-- Navigasi Atas -->
+    <header class="bg-white rounded-xl shadow-sm p-4 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+        <div>
+            <h1 class="text-xl font-bold text-primary">📒 Jurnal Mengajar Guru Smansagas</h1>
+            <p class="text-sm text-gray-500" id="userInfo">—</p>
+        </div>
+        <div class="flex gap-2">
+            <button id="tabGuru" onclick="bukaTab('guru')" class="px-4 py-2 rounded-lg bg-primary text-white font-medium">
+                <i class="fa fa-pencil mr-1"></i> Isi Jurnal
+            </button>
+            <button id="tabAdmin" onclick="bukaTab('admin')" class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 font-medium hidden">
+                <i class="fa fa-dashboard mr-1"></i> Panel Admin
+            </button>
+            <button onclick="keluarAkun()" class="px-4 py-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200">
+                <i class="fa fa-sign-out"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ========== TAB GURU: ISI JURNAL ========== -->
+    <div id="panelGuru" class="tab-content active">
+        <div class="grid md:grid-cols-3 gap-6">
+            <!-- Form Isian -->
+            <div class="md:col-span-2 bg-white rounded-xl shadow-sm p-6">
+                <h2 class="text-lg font-semibold mb-4">Formulir Isian Jurnal</h2>
+                <form id="formJurnal" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Nama Guru</label>
+                            <input type="text" id="namaGuru" required class="w-full border rounded-lg px-3 py-2" placeholder="Nama lengkap pengajar">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Tanggal</label>
+                            <input type="date" id="tanggal" required class="w-full border rounded-lg px-3 py-2">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Kelas</label>
+                            <select id="kelas" required class="w-full border rounded-lg px-3 py-2">
+                                <option value="">-- Pilih Kelas --</option>
+                                <option disabled>── Kelas X ──</option>
+                                <option>X-1</option><option>X-2</option><option>X-3</option><option>X-4</option>
+                                <option>X-5</option><option>X-6</option><option>X-7</option><option>X-8</option>
+                                <option>X-9</option><option>X-10</option><option>X-11</option><option>X-12</option>
+                                <option disabled>── Kelas XI ──</option>
+                                <option>XI-1</option><option>XI-2</option><option>XI-3</option><option>XI-4</option>
+                                <option>XI-5</option><option>XI-6</option><option>XI-7</option><option>XI-8</option>
+                                <option>XI-9</option><option>XI-10</option><option>XI-11</option><option>XI-12</option>
+                                <option disabled>── Kelas XII ──</option>
+                                <option>XII-1</option><option>XII-2</option><option>XII-3</option><option>XII-4</option>
+                                <option>XII-5</option><option>XII-6</option><option>XII-7</option><option>XII-8</option>
+                                <option>XII-9</option><option>XII-10</option><option>XII-11</option><option>XII-12</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Jam Ke-</label>
+                            <input type="text" id="jam" placeholder="1-2" required class="w-full border rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Mata Pelajaran</label>
+                            <input type="text" id="mapel" required class="w-full border rounded-lg px-3 py-2" placeholder="Contoh: Matematika">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Materi / Kegiatan</label>
+                        <textarea id="materi" rows="3" required class="w-full border rounded-lg px-3 py-2" placeholder="Uraikan materi yang diajarkan..."></textarea>
+                    </div>
+
+                    <div class="border rounded-lg p-4 bg-gray-50">
+                        <label class="block text-sm font-medium mb-2">Presensi Siswa</label>
+                        <div class="grid grid-cols-5 gap-2 text-center">
+                            <div>
+                                <span class="text-xs text-gray-500">Total</span>
+                                <input type="number" id="jmlTotal" min="1" class="w-full border rounded px-2 py-1 text-center">
+                            </div>
+                            <div>
+                                <span class="text-xs text-green-600">Hadir</span>
+                                <input type="number" id="jmlHadir" value="0" min="0" class="w-full border rounded px-2 py-1 text-center">
+                            </div>
+                            <div>
+                                <span class="text-xs text-yellow-600">Sakit</span>
+                                <input type="number" id="jmlSakit" value="0" min="0" class="w-full border rounded px-2 py-1 text-center">
+                            </div>
+                            <div>
+                                <span class="text-xs text-orange-500">Izin</span>
+                                <input type="number" id="jmlIzin" value="0" min="0" class="w-full border rounded px-2 py-1 text-center">
+                            </div>
+                            <div>
+                                <span class="text-xs text-red-600">Alpa</span>
+                                <input type="number" id="jmlAlpa" value="0" min="0" class="w-full border rounded px-2 py-1 text-center">
+                            </div>
+                        </div>
+                        <textarea id="tidakHadir" rows="2" class="w-full border rounded px-3 py-2 mt-3" placeholder="Nama siswa yang tidak hadir & keterangan..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Catatan Pembelajaran</label>
+                        <textarea id="catatan" rows="3" class="w-full border rounded-lg px-3 py-2" placeholder="Kendala, keberhasilan, tindak lanjut..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Foto Dokumentasi</label>
+                        <input type="file" id="fotoInput" accept="image/*" class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:bg-primary/5 file:text-primary hover:file:bg-primary/10">
+                        <div id="pratinjauFoto" class="mt-3"></div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-primary text-white py-2.5 rounded-lg hover:bg-primary/90 font-medium">
+                        <i class="fa fa-save mr-1"></i> Simpan Jurnal
+                    </button>
+                </form>
+            </div>
+
+            <!-- Riwayat Guru -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h2 class="text-lg font-semibold mb-4">Jurnal Saya</h2>
+                <button onclick="unduhJurnalSaya()" class="w-full mb-3 bg-green-600 text-white py-2 rounded-lg text-sm">
+                    <i class="fa fa-download mr-1"></i> Unduh Excel
+                </button>
+                <div id="daftarJurnalGuru" class="space-y-3 max-h-[650px] overflow-y-auto pr-2">
+                    <p class="text-gray-400 text-sm italic">Belum ada jurnal.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== TAB ADMIN: KELOLA ========== -->
+    <div id="panelAdmin" class="tab-content">
+        <div class="grid md:grid-cols-4 gap-6">
+            <!-- Pengelolaan Akun -->
+            <div class="md:col-span-1 bg-white rounded-xl shadow-sm p-4">
+                <h3 class="font-semibold mb-3">Kelola Akun Pengguna</h3>
+                <div class="space-y-2 mb-4">
+                    <input type="text" id="akunNama" placeholder="Nama / Username" class="w-full border rounded px-3 py-2 text-sm">
+                    <input type="password" id="akunSandi" placeholder="Kata Sandi" class="w-full border rounded px-3 py-2 text-sm">
+                    <select id="akunPeran" class="w-full border rounded px-3 py-2 text-sm">
+                        <option value="guru">Guru</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                    <button onclick="tambahAkun()" class="w-full bg-admin text-white py-2 rounded text-sm">
+                        <i class="fa fa-plus"></i> Tambah Akun
+                    </button>
+                </div>
+                <div id="daftarAkun" class="text-sm space-y-1.5 max-h-60 overflow-y-auto">
+                    <p class="text-gray-400">Memuat...</p>
+                </div>
+            </div>
+
+            <!-- Semua Laporan -->
+            <div class="md:col-span-3 bg-white rounded-xl shadow-sm p-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
+                    <h3 class="font-semibold">Rekapan Jurnal Mengajar Sekolah</h3>
+                    <div class="flex gap-2 flex-wrap">
+                        <input type="date" id="filterTanggal" class="border rounded px-3 py-1.5 text-sm">
+                        <select id="filterKelas" class="border rounded px-3 py-1.5 text-sm">
+                            <option value="">Semua Kelas</option>
+                            <option disabled>── Kelas X ──</option>
+                            <option>X-1</option><option>X-2</option><option>X-3</option><option>X-4</option>
+                            <option>X-5</option><option>X-6</option><option>X-7</option><option>X-8</option>
+                            <option>X-9</option><option>X-10</option><option>X-11</option><option>X-12</option>
+                            <option disabled>── Kelas XI ──</option>
+                            <option>XI-1</option><option>XI-2</option><option>XI-3</option><option>XI-4</option>
+                            <option>XI-5</option><option>XI-6</option><option>XI-7</option><option>XI-8</option>
+                            <option>XI-9</option><option>XI-10</option><option>XI-11</option><option>XI-12</option>
+                            <option disabled>── Kelas XII ──</option>
+                            <option>XII-1</option><option>XII-2</option><option>XII-3</option><option>XII-4</option>
+                            <option>XII-5</option><option>XII-6</option><option>XII-7</option><option>XII-8</option>
+                            <option>XII-9</option><option>XII-10</option><option>XII-11</option><option>XII-12</option>
+                        </select>
+                        <button onclick="unduhSemuaJurnal()" class="bg-green-700 text-white px-3 py-1.5 rounded text-sm font-bold whitespace-nowrap">
+                            <i class="fa fa-file-excel-o mr-1"></i> Unduh Rekapan Excel
+                        </button>
+                    </div>
+                </div>
+                <div id="daftarSemuaJurnal" class="space-y-3 max-h-[650px] overflow-y-auto pr-2">
+                    <p class="text-gray-400 text-sm italic">Belum ada data jurnal.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+// === DATA & INISIALISASI ===
+let penggunaAktif = null;
+let fotoB64 = '';
+
+// Data akun awal
+function ambilAkun() {
+    return JSON.parse(localStorage.getItem('daftarAkun') || '[{"u":"admin","p":"admin123","r":"admin"}]');
+}
+function simpanAkun(data) {
+    localStorage.setItem('daftarAkun', JSON.stringify(data));
+}
+
+// Data jurnal seluruh pengguna
+function ambilSemuaJurnal() {
+    return JSON.parse(localStorage.getItem('semuaJurnal') || '[]');
+}
+function simpanJurnal(data) {
+    localStorage.setItem('semuaJurnal', JSON.stringify(data));
+}
+
+// === LOGIKA LOGIN ===
+function prosesLogin() {
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value;
+    const daftar = ambilAkun();
+    const cocok = daftar.find(a => a.u === u && a.p === p);
+    
+    if (!cocok) return alert('❌ Nama pengguna atau kata sandi salah!');
+    
+    penggunaAktif = cocok;
+    document.getElementById('loginSection').classList.add('hidden');
+    document.getElementById('mainSection').classList.remove('hidden');
+    document.getElementById('userInfo').innerHTML = `👤 ${cocok.u} <span class="role-badge ${cocok.r==='admin'?'bg-red-100 text-red-700':'bg-blue-100 text-blue-700'}">${cocok.r}</span>`;
+    
+    if (cocok.r === 'admin') {
+        document.getElementById('tabAdmin').classList.remove('hidden');
+        muatPanelAdmin();
+    }
+    muatJurnalGuru();
+}
+
+function keluarAkun() {
+    penggunaAktif = null;
+    document.getElementById('loginSection').classList.remove('hidden');
+    document.getElementById('mainSection').classList.add('hidden');
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+}
+
+// === NAVIGASI TAB ===
+function bukaTab(nama) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.getElementById('tabGuru').classList.remove('bg-primary', 'text-white');
+    document.getElementById('tabGuru').classList.add('bg-gray-200');
+    if (document.getElementById('tabAdmin')) {
+        document.getElementById('tabAdmin').classList.remove('bg-admin', 'text-white');
+        document.getElementById('tabAdmin').classList.add('bg-gray-200');
+    }
+    
+    if (nama === 'guru') {
+        document.getElementById('panelGuru').classList.add('active');
+        document.getElementById('tabGuru').classList.add('bg-primary', 'text-white');
+        muatJurnalGuru();
+    } else {
+        document.getElementById('panelAdmin').classList.add('active');
+        document.getElementById('tabAdmin').classList.add('bg-admin', 'text-white');
+        muatPanelAdmin();
+    }
+}
+
+// === PRATINJAU FOTO ===
+document.getElementById('fotoInput').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+        fotoB64 = ev.target.result;
+        document.getElementById('pratinjauFoto').innerHTML = `<img src="${fotoB64}" class="h-32 rounded-lg shadow">`;
+    };
+    r.readAsDataURL(f);
+});
+
+// === SIMPAN JURNAL ===
+document.getElementById('formJurnal').addEventListener('submit', e => {
+    e.preventDefault();
+    const jurnal = {
+        id: Date.now(),
+        namaGuru: document.getElementById('namaGuru').value,
+        pengajar: penggunaAktif.u,
+        tanggal: document.getElementById('tanggal').value,
+        kelas: document.getElementById('kelas').value,
+        jam: document.getElementById('jam').value,
+        mapel: document.getElementById('mapel').value,
+        materi: document.getElementById('materi').value,
+        jmlTotal: document.getElementById('jmlTotal').value || '-',
+        jmlHadir: document.getElementById('jmlHadir').value,
+        jmlSakit: document.getElementById('jmlSakit').value,
+        jmlIzin: document.getElementById('jmlIzin').value,
+        jmlAlpa: document.getElementById('jmlAlpa').value,
+        tidakHadir: document.getElementById('tidakHadir').value || '-',
+        catatan: document.getElementById('catatan').value || '-',
+        foto: fotoB64 || ''
+    };
+    
+    const semua = ambilSemuaJurnal();
+    semua.unshift(jurnal);
+    simpanJurnal(semua);
+    
+    alert('✅ Jurnal berhasil disimpan!');
+    document.getElementById('formJurnal').reset();
+    fotoB64 = '';
+    document.getElementById('pratinjauFoto').innerHTML = '';
+    muatJurnalGuru();
+});
+
+// === TAMPILKAN JURNAL MILIK SENDIRI ===
+function muatJurnalGuru() {
+    const wadah = document.getElementById('daftarJurnalGuru');
+    const data = ambilSemuaJurnal().filter(j => j.pengajar === penggunaAktif.u);
+    if (!data.length) return wadah.innerHTML = '<p class="text-gray-400 text-sm italic">Belum ada jurnal.</p>';
+    
+    wadah.innerHTML = data.map(j => `
+        <div class="border rounded-lg p-3 text-sm hover:bg-gray-50">
+            <p class="font-semibold">${j.namaGuru} — ${j.tanggal}</p>
+            <p class="text-gray-600">${j.kelas} | ${j.mapel} | Jam ${j.jam}</p>
+            <p class="mt-1 text-xs">Hadir: ${j.jmlHadir} | Sakit: ${j.jmlSakit} | Izin: ${j.jmlIzin} | Alpa: ${j.jmlAlpa}</p>
+            <p class="text-xs text-gray-500 mt-1 truncate">${j.materi}</p>
+            ${j.foto ? `<img src="${j.foto}" class="mt-2 h-20 rounded">` : ''}
+        </div>
+    `).join('');
+}
+
+// === UNDUHKAN JURNAL SENDIRI ===
+function unduhJurnalSaya() {
+    const data = ambilSemuaJurnal().filter(j => j.pengajar === penggunaAktif.u);
+    if (!data.length) return alert('Belum ada data untuk diunduh.');
+    eksporKeExcel(data, `Jurnal_${penggunaAktif.u}_${new Date().toLocaleDateString('id-ID').replaceAll('/','-')}`);
+}
+
+// === FUNGSI ADMIN ===
+function muatPanelAdmin() {
+    muatDaftarAkun();
+    muatSemuaJurnal();
+}
+
+function muatDaftarAkun() {
+    const daftar = ambilAkun();
+    const wadah = document.getElementById('daftarAkun');
+    wadah.innerHTML = daftar.map((a, i) => `
+        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+            <div>
+                <span class="font-medium">${a.u}</span>
+                <span class="text-xs px-2 py-0.5 rounded-full ${a.r==='admin'?'bg-red-100 text-red-700':'bg-blue-100 text-blue-700'}">${a.r}</span>
+            </div>
+            ${a.u !== 'admin' ? `<button onclick="hapusAkun(${i})" class="text-red-400 hover:text-red-600"><i class="fa fa-times"></i></button>` : ''}
+        </div>
+    `).join('');
+}
+
+function tambahAkun() {
+    const u = document.getElementById('akunNama').value.trim();
+    const p = document.getElementById('akunSandi').value;
+    const r = document.getElementById('akunPeran').value;
+    if (!u || !p) return alert('Nama dan kata sandi wajib diisi!');
+    
+    const daftar = ambilAkun();
+    if (daftar.some(a => a.u === u)) return alert('Nama pengguna sudah ada!');
+    daftar.push({u, p, r});
+    simpanAkun(daftar);
+    alert('✅ Akun berhasil ditambahkan!');
+    document.getElementById('akunNama').value = '';
+    document.getElementById('akunSandi').value = '';
+    muatDaftarAkun();
+}
+
+window.hapusAkun = function(idx) {
+    if (!confirm('Yakin menghapus akun ini?')) return;
+    const daftar = ambilAkun();
+    daftar.splice(idx, 1);
+    simpanAkun(daftar);
+    muatDaftarAkun();
+};
+
+function muatSemuaJurnal() {
+    const tgl = document.getElementById('filterTanggal').value;
+    const kls = document.getElementById('filterKelas').value;
+    let data = ambilSemuaJurnal();
+    if (tgl) data = data.filter(j => j.tanggal === tgl);
+    if (kls) data = data.filter(j => j.kelas === kls);
+    
+    const wadah = document.getElementById('daftarSemuaJurnal');
+    if (!data.length) return wadah.innerHTML = '<p class="text-gray-400 text-sm italic">Belum ada data jurnal.</p>';
+    
+    wadah.innerHTML = data.map(j => `
+        <div class="border rounded-lg p-4 hover:bg-gray-50">
+            <div class="flex justify-between flex-wrap gap-2">
+                <div>
+                    <span class="font-semibold">${j.namaGuru}</span>
+                    <span class="ml-2 text-gray-600">${j.tanggal} | ${j.kelas} | ${j.mapel} | Jam ${j.jam}</span>
+                </div>
+            </div>
+            <p class="mt-2 text-sm"><b>Materi:</b> ${j.materi}</p>
+            <p class="mt-1 text-sm">Hadir: ${j.jmlHadir} | Sakit: ${j.jmlSakit} | Izin: ${j.jmlIzin} | Alpa: ${j.jmlAlpa} | Tidak Hadir: ${j.tidakHadir}</p>
+            <p class="mt-1 text-sm text-gray-600"><b>Catatan:</b> ${j.catatan}</p>
+            ${j.foto ? `<p class="mt-2 text-sm font-medium">📸 Foto Dokumentasi:</p><img src="${j.foto}" class="mt-1 h-32 rounded-lg shadow">` : ''}
+        </div>
+    `).join('');
+}
+
+document.getElementById('filterTanggal').addEventListener('change', muatSemuaJurnal);
+document.getElementById('filterKelas').addEventListener('change', muatSemuaJurnal);
+
+function unduhSemuaJurnal() {
+    const tgl = document.getElementById('filterTanggal').value;
+    const kls = document.getElementById('filterKelas').value;
+    let data = ambilSemuaJurnal();
+    if (tgl) data = data.filter(j => j.tanggal === tgl);
+    if (kls) data = data.filter(j => j.kelas === kls);
+    
+    if (!data.length) return alert('Belum ada data untuk diunduh.');
+    
+    let namaBerkas = 'Rekapan_Jurnal_Sekolah';
+    if (tgl) namaBerkas += `_Tanggal_${tgl}`;
+    if (kls) namaBerkas += `_Kelas_${kls}`;
+    namaBerkas += `_${new Date().toLocaleDateString('id-ID').replaceAll('/','-')}`;
+    
+    eksporKeExcel(data, namaBerkas);
+}
+
+// === FUNGSI EKSPOR EXCEL DENGAN FOTO ===
+function eksporKeExcel(data, namaBerkas) {
+    const kolom = [
+        'Nama Guru','Pengajar (Akun)','Tanggal','Kelas','Jam Ke-','Mata Pelajaran','Materi',
+        'Jumlah Siswa','Hadir','Sakit','Izin','Alpa','Daftar Tidak Hadir',
+        'Catatan','Foto (Klik tautan untuk membuka)'
+    ];
+    const baris = data.map(j => [
+        j.namaGuru,
+        j.pengajar,
+        j.tanggal,
+        j.kelas,
+        j.jam,
+        j.mapel,
+        j.materi,
+        j.jmlTotal,
+        j.jmlHadir,
+        j.jmlSakit,
+        j.jmlIzin,
+        j.jmlAlpa,
+        j.tidakHadir,
+        j.catatan,
+        j.foto ? `=HYPERLINK("${j.foto}","Lihat Foto")` : 'Tidak Ada Foto'
+    ]);
+    
+    const buku = XLSX.utils.book_new();
+    const lembar = XLSX.utils.aoa_to_sheet([kolom, ...baris]);
+    
+    // Lebar kolom agar rapi
+    lembar['!cols'] = [
+        {wch:18},{wch:14},{wch:12},{wch:10},{wch:8},{wch:16},{wch:30},
+        {wch:10},{wch:8},{wch:8},{wch:8},{wch:8},{wch:20},{wch:25},{wch:35}
+    ];
+    
+    XLSX.utils.book_append_sheet(buku, lembar, 'Rekapan Jurnal');
+    XLSX.writeFile(buku, `${namaBerkas}.xlsx`);
+}
+</script>
+</body>
+</html>
